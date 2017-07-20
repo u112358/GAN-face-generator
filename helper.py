@@ -1,7 +1,7 @@
 import math
 import os
 import hashlib
-from urllib.request import urlretrieve
+import urllib
 import zipfile
 import gzip
 import shutil
@@ -154,7 +154,7 @@ def download_extract(database_name, data_path):
 
     if not os.path.exists(save_path):
         with DLProgress(unit='B', unit_scale=True, miniters=1, desc='Downloading {}'.format(database_name)) as pbar:
-            urlretrieve(
+            urllib.urlretrieve(
                 url,
                 save_path,
                 pbar.hook)
@@ -211,7 +211,7 @@ class Dataset(object):
         while current_index + batch_size <= self.shape[0]:
             data_batch = get_batch(
                 self.data_files[current_index:current_index + batch_size],
-                *self.shape[1:3],
+                self.shape[1],self.shape[2],
                 self.image_mode)
 
             current_index += batch_size
