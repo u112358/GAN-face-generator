@@ -9,32 +9,11 @@ DON'T MODIFY ANYTHING IN THIS CELL
 """
 import helper
 
-helper.download_extract('mnist', data_dir)
-helper.download_extract('celeba', data_dir)
 
-
-show_n_images = 25
-
-"""
-DON'T MODIFY ANYTHING IN THIS CELL
-"""
-#%matplotlib inline
 import os
 from glob import glob
-from matplotlib import pyplot
-
-mnist_images = helper.get_batch(glob(os.path.join(data_dir, 'mnist/*.jpg'))[:show_n_images], 28, 28, 'L')
-#pyplot.imshow(helper.images_square_grid(mnist_images, 'L'), cmap='gray')
-
-
-"""
-DON'T MODIFY ANYTHING IN THIS CELL
-"""
-from distutils.version import LooseVersion
-import warnings
 import tensorflow as tf
-
-
+import numpy as np
 
 
 
@@ -167,7 +146,8 @@ def model_loss(input_real, input_z, out_channel_dim):
     g_loss = tf.reduce_mean(
         tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_fake,
                                                 labels=tf.ones_like(d_model_fake)))
-
+    tf.summary.scalar('d_loss',d_loss)
+    tf.summary.scalar('g_loss',g_loss)
     return d_loss, g_loss
 
 
@@ -196,12 +176,6 @@ def model_opt(d_loss, g_loss, learning_rate, beta1):
 
 
 
-
-"""
-DON'T MODIFY ANYTHING IN THIS CELL
-"""
-import numpy as np
-
 def show_generator_output(sess, n_images, input_z, out_channel_dim, image_mode):
     """
     Show example output for the generator
@@ -218,7 +192,7 @@ def show_generator_output(sess, n_images, input_z, out_channel_dim, image_mode):
     samples = sess.run(
         generator(input_z, out_channel_dim, False),
         feed_dict={input_z: example_z})
-
+    tf.summary.image('samples',samples,10)
     images_grid = helper.images_square_grid(samples, image_mode)
 
     #pyplot.imshow(images_grid, cmap=cmap)
@@ -237,35 +211,27 @@ def train(epoch_count, batch_size, z_dim, learning_rate, beta1, get_batches, dat
     :param data_shape: Shape of the data
     :param data_image_mode: The image mode to use for images ("RGB" or "L")
     """
-    tf.reset_default_graph()
+
+    gpu_config = tf.ConfigProto(allow_soft_placement=True)
+    sess = tf.Session(config=gpu_config)
     input_real, input_z, _ = model_inputs(data_shape[1], data_shape[2], data_shape[3], z_dim)
     d_loss, g_loss = model_loss(input_real, input_z, data_shape[3])
     d_opt, g_opt = model_opt(d_loss, g_loss, learning_rate, beta1)
-
+    sum_op = tf.summary.merge_all()
     steps = 0
 
-    with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
-        for epoch_i in range(epoch_count):
-            for batch_images in get_batches(batch_size):
-                batch_images = batch_images * 2
-                steps += 1
+    sess.run(tf.global_variables_initializer())
+    sumWriter = tf.summary.FileWriter('./log/',sess.graph)
+    for epoch_i in range(epoch_count):
+        for batch_images in get_batches(batch_size):
+            batch_images = batch_images * 2
+            steps += 1
 
-                batch_z = np.random.uniform(-1, 1, size=(batch_size, z_dim))
+            batch_z = np.random.uniform(-1, 1, size=(batch_size, z_dim))
 
-                _ = sess.run(d_opt, feed_dict={input_real: batch_images, input_z: batch_z})
-                _ = sess.run(g_opt, feed_dict={input_z: batch_z})
-
-                if steps % 100 == 0:
-                    # At the end of every 10 epochs, get the losses and print them out
-                    train_loss_d = d_loss.eval({input_z: batch_z, input_real: batch_images})
-                    train_loss_g = g_loss.eval({input_z: batch_z})
-
-                    print("Epoch {}/{}...".format(epoch_i + 1, epochs),
-                          "Discriminator Loss: {:.4f}...".format(train_loss_d),
-                          "Generator Loss: {:.4f}".format(train_loss_g))
-
-                    _ = show_generator_output(sess, 1, input_z, data_shape[3], data_image_mode)
+            summ,_ = sess.run([sum_op,d_opt], feed_dict={input_real: batch_images, input_z: batch_z})
+            _ = sess.run(g_opt, feed_dict={input_z: batch_z})
+            sumWriter.add_summary(summ,steps)
 
 batch_size = 10
 z_dim = 100
