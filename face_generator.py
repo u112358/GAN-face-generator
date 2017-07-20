@@ -26,6 +26,10 @@ from matplotlib import pyplot
 mnist_images = helper.get_batch(glob(os.path.join(data_dir, 'mnist/*.jpg'))[:show_n_images], 28, 28, 'L')
 #pyplot.imshow(helper.images_square_grid(mnist_images, 'L'), cmap='gray')
 
+
+"""
+DON'T MODIFY ANYTHING IN THIS CELL
+"""
 from distutils.version import LooseVersion
 import warnings
 import tensorflow as tf
@@ -49,8 +53,6 @@ def model_inputs(image_width, image_height, image_channels, z_dim):
     learning_rate = tf.placeholder(tf.float32, name='learning_rate')
 
     return inputs_real, inputs_z, learning_rate
-
-
 
 
 
@@ -96,7 +98,6 @@ def discriminator(images, reuse=False):
         out = tf.sigmoid(logits)
 
         return out, logits
-
 
 
 
@@ -166,8 +167,7 @@ def model_loss(input_real, input_z, out_channel_dim):
     g_loss = tf.reduce_mean(
         tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_fake,
                                                 labels=tf.ones_like(d_model_fake)))
-    tf.summary.scalar('d_loss',d_loss)
-    tf.summary.scalar('g_loss',g_loss)
+
     return d_loss, g_loss
 
 
@@ -196,6 +196,7 @@ def model_opt(d_loss, g_loss, learning_rate, beta1):
 
 
 
+
 """
 DON'T MODIFY ANYTHING IN THIS CELL
 """
@@ -217,8 +218,9 @@ def show_generator_output(sess, n_images, input_z, out_channel_dim, image_mode):
     samples = sess.run(
         generator(input_z, out_channel_dim, False),
         feed_dict={input_z: example_z})
-    tf.summary.image('out_z',samples,10)
+
     images_grid = helper.images_square_grid(samples, image_mode)
+
     #pyplot.imshow(images_grid, cmap=cmap)
     #pyplot.show()
 
@@ -239,8 +241,7 @@ def train(epoch_count, batch_size, z_dim, learning_rate, beta1, get_batches, dat
     input_real, input_z, _ = model_inputs(data_shape[1], data_shape[2], data_shape[3], z_dim)
     d_loss, g_loss = model_loss(input_real, input_z, data_shape[3])
     d_opt, g_opt = model_opt(d_loss, g_loss, learning_rate, beta1)
-    summary_op = tf.summary.merge_all()
-    summary_writer = tf.summary.FileWriter('./log/')
+
     steps = 0
 
     with tf.Session() as sess:
@@ -253,8 +254,8 @@ def train(epoch_count, batch_size, z_dim, learning_rate, beta1, get_batches, dat
                 batch_z = np.random.uniform(-1, 1, size=(batch_size, z_dim))
 
                 _ = sess.run(d_opt, feed_dict={input_real: batch_images, input_z: batch_z})
-                _,sum = sess.run([g_opt,summary_op], feed_dict={input_z: batch_z})
-                summary_writer.add_summary(sum,global_step=steps)
+                _ = sess.run(g_opt, feed_dict={input_z: batch_z})
+
                 if steps % 100 == 0:
                     # At the end of every 10 epochs, get the losses and print them out
                     train_loss_d = d_loss.eval({input_z: batch_z, input_real: batch_images})
