@@ -24,7 +24,7 @@ from glob import glob
 from matplotlib import pyplot
 
 mnist_images = helper.get_batch(glob(os.path.join(data_dir, 'mnist/*.jpg'))[:show_n_images], 28, 28, 'L')
-pyplot.imshow(helper.images_square_grid(mnist_images, 'L'), cmap='gray')
+#pyplot.imshow(helper.images_square_grid(mnist_images, 'L'), cmap='gray')
 
 from distutils.version import LooseVersion
 import warnings
