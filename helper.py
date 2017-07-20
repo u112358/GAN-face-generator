@@ -102,7 +102,7 @@ def images_square_grid(images, mode):
     :return: Image of images in a square grid
     """
     # Get maximum size for square grid of images
-    save_size = math.floor(np.sqrt(images.shape[0]))
+    save_size = int(math.floor(np.sqrt(images.shape[0])))
 
     # Scale to 0-255
     images = (((images - images.min()) * 255) / (images.max() - images.min())).astype(np.uint8)
