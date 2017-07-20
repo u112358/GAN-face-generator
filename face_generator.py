@@ -24,7 +24,7 @@ from glob import glob
 from matplotlib import pyplot
 
 mnist_images = helper.get_batch(glob(os.path.join(data_dir, 'mnist/*.jpg'))[:show_n_images], 28, 28, 'L')
-pyplot.imshow(helper.images_square_grid(mnist_images, 'L'), cmap='gray')
+#pyplot.imshow(helper.images_square_grid(mnist_images, 'L'), cmap='gray')
 
 
 """
@@ -248,8 +248,8 @@ def show_generator_output(sess, n_images, input_z, out_channel_dim, image_mode):
         feed_dict={input_z: example_z})
 
     images_grid = helper.images_square_grid(samples, image_mode)
-    pyplot.imshow(images_grid, cmap=cmap)
-    pyplot.show()
+    #pyplot.imshow(images_grid, cmap=cmap)
+    #pyplot.show()
 
 
 def train(epoch_count, batch_size, z_dim, learning_rate, beta1, get_batches, data_shape, data_image_mode):
