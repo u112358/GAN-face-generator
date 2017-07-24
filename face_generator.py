@@ -14,7 +14,7 @@ import os
 from glob import glob
 import tensorflow as tf
 import numpy as np
-
+import datetime as datetime
 
 
 def model_inputs(image_width, image_height, image_channels, z_dim):
@@ -115,6 +115,7 @@ def generator(z, out_channel_dim, is_train=True):
 
         # Output
         out = tf.tanh(logits)
+        tf.summary.image('out',out,10)
 
         return out
 
@@ -176,29 +177,6 @@ def model_opt(d_loss, g_loss, learning_rate, beta1):
 
 
 
-def show_generator_output(sess, n_images, input_z, out_channel_dim, image_mode):
-    """
-    Show example output for the generator
-    :param sess: TensorFlow session
-    :param n_images: Number of Images to display
-    :param input_z: Input Z Tensor
-    :param out_channel_dim: The number of channels in the output image
-    :param image_mode: The mode to use for images ("RGB" or "L")
-    """
-    cmap = None if image_mode == 'RGB' else 'gray'
-    z_dim = input_z.get_shape().as_list()[-1]
-    example_z = np.random.uniform(-1, 1, size=[n_images, z_dim])
-
-    samples = sess.run(
-        generator(input_z, out_channel_dim, False),
-        feed_dict={input_z: example_z})
-    tf.summary.image('samples',samples,10)
-    images_grid = helper.images_square_grid(samples, image_mode)
-
-    #pyplot.imshow(images_grid, cmap=cmap)
-    #pyplot.show()
-
-
 def train(epoch_count, batch_size, z_dim, learning_rate, beta1, get_batches, data_shape, data_image_mode):
     """
     Train the GAN
@@ -221,7 +199,8 @@ def train(epoch_count, batch_size, z_dim, learning_rate, beta1, get_batches, dat
     steps = 0
 
     sess.run(tf.global_variables_initializer())
-    sumWriter = tf.summary.FileWriter('./log/',sess.graph)
+    logdir=os.path.join('./log/',datetime.datetime.now().isoformat())
+    sumWriter = tf.summary.FileWriter(logdir,sess.graph)
     for epoch_i in range(epoch_count):
         for batch_images in get_batches(batch_size):
             batch_images = batch_images * 2
@@ -233,7 +212,7 @@ def train(epoch_count, batch_size, z_dim, learning_rate, beta1, get_batches, dat
             _ = sess.run(g_opt, feed_dict={input_z: batch_z})
             sumWriter.add_summary(summ,steps)
 
-batch_size = 10
+batch_size = 40
 z_dim = 100
 learning_rate = 0.0003
 beta1 = 0.5
@@ -241,9 +220,9 @@ beta1 = 0.5
 """
 DON'T MODIFY ANYTHING IN THIS CELL THAT IS BELOW THIS LINE
 """
-epochs = 2
+epochs = 10
 
-mnist_dataset = helper.Dataset('mnist', glob(os.path.join(data_dir, 'mnist/*.jpg')))
+celeba_dataset = helper.Dataset('celeba', glob(os.path.join(data_dir, 'img_align_celeba/*.jpg')))
 with tf.Graph().as_default():
-    train(epochs, batch_size, z_dim, learning_rate, beta1, mnist_dataset.get_batches,
-          mnist_dataset.shape, mnist_dataset.image_mode)
+    train(epochs, batch_size, z_dim, learning_rate, beta1, celeba_dataset.get_batches,
+          celeba_dataset.shape, celeba_dataset.image_mode)
