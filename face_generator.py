@@ -67,8 +67,11 @@ def discriminator(images, reuse=False):
         batch_norm4 = tf.layers.batch_normalization(conv4, training=True)
         lrelu4 = tf.maximum(alpha * batch_norm4, batch_norm4)
 
+        conv5 = tf.layers.conv2d(lrelu4, 512, 5, 1, 'SAME')
+        batch_norm5 = tf.layers.batch_normalization(conv5, training=True)
+        lrelu5 = tf.maximum(alpha * batch_norm5, batch_norm5)
         # Flatten
-        flat = tf.reshape(lrelu4, (-1, 7 * 7 * 512))
+        flat = tf.reshape(lrelu5, (-1, 8 * 8 * 512))
 
         # Logits
         logits = tf.layers.dense(flat, 1)
@@ -93,8 +96,8 @@ def generator(z, out_channel_dim, is_train=True):
 
     with tf.variable_scope('generator', reuse=False if is_train == True else True):
         # Fully connected
-        fc1 = tf.layers.dense(z, 7 * 7 * 512)
-        fc1 = tf.reshape(fc1, (-1, 7, 7, 512))
+        fc1 = tf.layers.dense(z, 8 * 8 * 512)
+        fc1 = tf.reshape(fc1, (-1, 8, 8, 512))
         fc1 = tf.maximum(alpha * fc1, fc1)
 
         # Starting Conv Transpose Stack
@@ -110,12 +113,16 @@ def generator(z, out_channel_dim, is_train=True):
         batch_norm4 = tf.layers.batch_normalization(deconv4, training=is_train)
         lrelu4 = tf.maximum(alpha * batch_norm4, batch_norm4)
 
+        deconv5 = tf.layers.conv2d_transpose(lrelu4,64,3,2,'SAME')
+        batch_norm5 = tf.layers.batch_normalization(deconv5, training=is_train)
+        lrelu5 = tf.maximum(alpha * batch_norm5, batch_norm5)
+
         # Logits
-        logits = tf.layers.conv2d_transpose(lrelu4, out_channel_dim, 3, 2, 'SAME')
+        logits = tf.layers.conv2d_transpose(lrelu5, out_channel_dim, 3, 2, 'SAME')
 
         # Output
         out = tf.tanh(logits)
-        tf.summary.image('out',out,10)
+        tf.summary.image('out',out,20)
 
         return out
 

@@ -185,8 +185,8 @@ class Dataset(object):
         """
         DATASET_CELEBA_NAME = 'celeba'
         DATASET_MNIST_NAME = 'mnist'
-        IMAGE_WIDTH = 28
-        IMAGE_HEIGHT = 28
+        IMAGE_WIDTH = 64
+        IMAGE_HEIGHT = 64
 
         if dataset_name == DATASET_CELEBA_NAME:
             self.image_mode = 'RGB'
