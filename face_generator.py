@@ -49,21 +49,21 @@ def discriminator(images, reuse=False):
         # using 4 layer network as in DCGAN Paper
 
         # Conv 1
-        conv1 = tf.layers.conv2d(images, 64, 5, 2, 'SAME')
+        conv1 = tf.layers.conv2d(images, 32, 5, 2, 'SAME')
         lrelu1 = tf.maximum(alpha * conv1, conv1)
 
         # Conv 2
-        conv2 = tf.layers.conv2d(lrelu1, 128, 5, 2, 'SAME')
+        conv2 = tf.layers.conv2d(lrelu1, 64, 5, 2, 'SAME')
         batch_norm2 = tf.layers.batch_normalization(conv2, training=True)
         lrelu2 = tf.maximum(alpha * batch_norm2, batch_norm2)
 
         # Conv 3
-        conv3 = tf.layers.conv2d(lrelu2, 256, 5, 1, 'SAME')
+        conv3 = tf.layers.conv2d(lrelu2, 128, 5, 1, 'SAME')
         batch_norm3 = tf.layers.batch_normalization(conv3, training=True)
         lrelu3 = tf.maximum(alpha * batch_norm3, batch_norm3)
 
         # Conv 4
-        conv4 = tf.layers.conv2d(lrelu3, 512, 5, 1, 'SAME')
+        conv4 = tf.layers.conv2d(lrelu3, 256, 5, 1, 'SAME')
         batch_norm4 = tf.layers.batch_normalization(conv4, training=True)
         lrelu4 = tf.maximum(alpha * batch_norm4, batch_norm4)
 
@@ -113,7 +113,7 @@ def generator(z, out_channel_dim, is_train=True):
         batch_norm4 = tf.layers.batch_normalization(deconv4, training=is_train)
         lrelu4 = tf.maximum(alpha * batch_norm4, batch_norm4)
 
-        deconv5 = tf.layers.conv2d_transpose(lrelu4,64,3,2,'SAME')
+        deconv5 = tf.layers.conv2d_transpose(lrelu4,32,3,2,'SAME')
         batch_norm5 = tf.layers.batch_normalization(deconv5, training=is_train)
         lrelu5 = tf.maximum(alpha * batch_norm5, batch_norm5)
 
@@ -215,8 +215,9 @@ def train(epoch_count, batch_size, z_dim, learning_rate, beta1, get_batches, dat
 
             batch_z = np.random.uniform(-1, 1, size=(batch_size, z_dim))
 
-            summ,_ = sess.run([sum_op,d_opt], feed_dict={input_real: batch_images, input_z: batch_z})
+            summ,gloss,dloss,_ = sess.run([sum_op,g_loss,d_loss,d_opt], feed_dict={input_real: batch_images, input_z: batch_z})
             _ = sess.run(g_opt, feed_dict={input_z: batch_z})
+            print 'epoch[%d] step[%d] gloss[%lf] dloss[%lf]' %(epoch_i, steps,gloss,dloss)
             sumWriter.add_summary(summ,steps)
 
 batch_size = 40
