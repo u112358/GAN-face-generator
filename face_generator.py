@@ -198,7 +198,7 @@ def train(epoch_count, batch_size, z_dim, learning_rate, beta1, get_batches, dat
     """
 
     gpu_config = tf.ConfigProto(allow_soft_placement=True)
-    saver = tf.train.Saver(tf.trainable_variables())
+    saver = tf.train.Saver()
     sess = tf.Session(config=gpu_config)
     input_real, input_z, _ = model_inputs(data_shape[1], data_shape[2], data_shape[3], z_dim)
     d_loss, g_loss = model_loss(input_real, input_z, data_shape[3])
