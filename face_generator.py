@@ -84,7 +84,7 @@ def discriminator(images, reuse=False):
 
 
 
-def generator(z, out_channel_dim, is_train=True):
+def generator(z, out_channel_dim, is_train=False):
     """
     Create the generator network
     :param z: Input z
@@ -182,6 +182,16 @@ def model_opt(d_loss, g_loss, learning_rate, beta1):
     return d_train_opt, g_train_opt
 
 
+def generate(z,out_channel_dim):
+    gpu_config = tf.ConfigProto(allow_soft_placement=True)
+    sess = tf.Session(config=gpu_config)
+    sess.run(tf.global_variables_initializer())
+
+    input_real, input_z, _ = model_inputs(64, 64, 3, 100)
+    tf.train.Saver().restore(sess,'./model/GAN-25320')
+    out = generator(z, out_channel_dim)
+    img = sess.run(out,feed_dict={input_z:z})
+    return img
 
 
 def train(epoch_count, batch_size, z_dim, learning_rate, beta1, get_batches, data_shape, data_image_mode):
@@ -221,17 +231,26 @@ def train(epoch_count, batch_size, z_dim, learning_rate, beta1, get_batches, dat
             print 'epoch[%d] step[%d] gloss[%lf] dloss[%lf]' %(epoch_i, steps,gloss,dloss)
             sumWriter.add_summary(summ,steps)
         saver.save(sess,'./model/GAN',global_step=steps)
-batch_size = 40
-z_dim = 100
-learning_rate = 0.0003
-beta1 = 0.5
 
-"""
-DON'T MODIFY ANYTHING IN THIS CELL THAT IS BELOW THIS LINE
-"""
-epochs = 10
 
-celeba_dataset = helper.Dataset('celeba', glob(os.path.join(data_dir, 'img_align_celeba/*.jpg')))
-with tf.Graph().as_default():
-    train(epochs, batch_size, z_dim, learning_rate, beta1, celeba_dataset.get_batches,
-          celeba_dataset.shape, celeba_dataset.image_mode)
+
+
+
+if __name__ == '__main__':
+    batch_size = 40
+    z_dim = 100
+    learning_rate = 0.0003
+    beta1 = 0.5
+
+    """
+    DON'T MODIFY ANYTHING IN THIS CELL THAT IS BELOW THIS LINE
+    """
+    epochs = 10
+
+    celeba_dataset = helper.Dataset('celeba', glob(os.path.join(data_dir, 'img_align_celeba/*.jpg')))
+
+    # train(epochs, batch_size, z_dim, learning_rate, beta1, celeba_dataset.get_batches,
+    #       celeba_dataset.shape, celeba_dataset.image_mode)
+    z = np.random.uniform(-1,1,size=(1,100))
+    img = generate(z,3)
+    print img
