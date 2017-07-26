@@ -199,6 +199,7 @@ def train(epoch_count, batch_size, z_dim, learning_rate, beta1, get_batches, dat
 
     gpu_config = tf.ConfigProto(allow_soft_placement=True)
     sess = tf.Session(config=gpu_config)
+    saver = tf.train.Saver(tf.trainable_variables())
     input_real, input_z, _ = model_inputs(data_shape[1], data_shape[2], data_shape[3], z_dim)
     d_loss, g_loss = model_loss(input_real, input_z, data_shape[3])
     d_opt, g_opt = model_opt(d_loss, g_loss, learning_rate, beta1)
@@ -219,7 +220,7 @@ def train(epoch_count, batch_size, z_dim, learning_rate, beta1, get_batches, dat
             _ = sess.run(g_opt, feed_dict={input_z: batch_z})
             print 'epoch[%d] step[%d] gloss[%lf] dloss[%lf]' %(epoch_i, steps,gloss,dloss)
             sumWriter.add_summary(summ,steps)
-
+        saver.save(sess,'GAN',global_step=steps)
 batch_size = 40
 z_dim = 100
 learning_rate = 0.0003
